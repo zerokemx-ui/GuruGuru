@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>後台 · 咕嚕咕嚕雙腸搗蛋</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=Noto+Sans+TC:wght@300;400;500;700;900&family=Caveat:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+  <div id="admin-root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+  <script src="store.js"></script>
+  <script src="github-api.js"></script>
+
+  <script type="text/babel" data-presets="react" src="admin-app.jsx"></script>
+  <script type="text/babel" data-presets="react" src="admin-tabs.jsx"></script>
+  <script type="text/babel" data-presets="react">
+    ReactDOM.createRoot(document.getElementById('admin-root')).render(<AdminApp />);
+  </script>
+</body>
+</html>
