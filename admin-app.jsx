@@ -77,6 +77,29 @@ function Field({ label, hint, children }) {
   );
 }
 
+function translateError(msg) {
+  const m = String(msg || '');
+  if (/not found/i.test(m) || /\b404\b/.test(m)) {
+    return 'Token 沒有寫入權限。請到 GitHub 重建 classic token，並把整個「repo」權限打勾，再重新登入。';
+  }
+  if (/bad credentials/i.test(m) || /\b401\b/.test(m)) {
+    return 'Token 無效或已過期。請重新建立一組 Token 後再登入。';
+  }
+  if (/rate limit/i.test(m)) {
+    return '操作太頻繁，已達 GitHub 流量上限。請等幾分鐘後再試。';
+  }
+  if (/\b403\b/.test(m)) {
+    return 'Token 權限不足。請確認建立 Token 時有勾選整個「repo」權限。';
+  }
+  if (/\b422\b/.test(m) || /\bsha\b/i.test(m)) {
+    return '版本衝突：data.json 在別的地方被改過了。請登出後重新登入，載入最新內容再編輯。';
+  }
+  if (/failed to fetch/i.test(m) || /networkerror/i.test(m) || /network error/i.test(m)) {
+    return '網路連線失敗。請檢查網路後再試一次。';
+  }
+  return m;
+}
+
 function LoginScreen({ onLogin, error, loading }) {
   const [token, setToken] = useState('');
   return (
@@ -167,7 +190,7 @@ function AdminApp() {
       }
       setLoggedIn(true);
     } catch (e) {
-      setLoginError('登入失敗：' + e.message);
+      setLoginError('登入失敗：' + translateError(e.message));
     }
     if (!isAutoLogin) setLoginLoading(false);
     setInitialLoading(false);
@@ -295,7 +318,7 @@ function AdminApp() {
       setTimeout(() => setStatusMsg(''), 6000);
     } catch (e) {
       setStatusType('error');
-      setStatusMsg('儲存失敗：' + e.message);
+      setStatusMsg('儲存失敗：' + translateError(e.message));
     }
     setSaving(false);
   };

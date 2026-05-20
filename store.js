@@ -61,7 +61,7 @@ window.GGStore = {
 
   init: function () {
     var self = this;
-    fetch('data.json')
+    fetch('data.json?t=' + Date.now())
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) { if (d) self._data = d; })
       .catch(function () {})
