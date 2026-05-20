@@ -1,6 +1,6 @@
 window.GitHubAPI = {
   owner: 'zerokemx-ui',
-  repo: 'zerokemx-ui',
+  repo: 'GuruGuru',
   branch: 'main',
   token: null,
 
