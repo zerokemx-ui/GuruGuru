@@ -1,2 +1,6 @@
 screenshots/
 .claude/
+node_modules/
+netlify/functions/users.json
+netlify/functions/hash.txt
+.env

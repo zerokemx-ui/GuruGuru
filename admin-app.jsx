@@ -111,7 +111,8 @@ function translateError(msg) {
   if (/rate limit/i.test(m)) return '操作太頻繁，請稍後再試。';
   if (/\b403\b/.test(m)) return '沒有權限執行此操作。';
   if (/failed to fetch/i.test(m) || /networkerror/i.test(m) || /network error/i.test(m)) return '網路連線失敗，請檢查網路後再試。';
-  return m;
+  // Sanitize fallback to prevent XSS from raw API error messages
+  return m.replace(/[<>]/g, '');
 }
 
 // ── Login Screen ─────────────────────────────────────────────────────────────
