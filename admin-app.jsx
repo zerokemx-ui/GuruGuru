@@ -298,9 +298,10 @@ function AccountsTab() {
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [inviteLink, setInviteLink] = useState('');
-  const [inviteExpiry, setInviteExpiry] = useState('');
-  const [inviteMsg, setInviteMsg] = useState('');
+  const [msg, setMsg] = useState('');
+  const [newAccount, setNewAccount] = useState({ username: '', password: '', name: '', email: '', role: 'member' });
+  const [savingNew, setSavingNew] = useState(false);
+  const [savingAccount, setSavingAccount] = useState(null);
   const [deleting, setDeleting] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
 
@@ -319,17 +320,38 @@ function AccountsTab() {
 
   useEffect(() => { loadAccounts(); }, [loadAccounts]);
 
-  const handleGenerateInvite = async () => {
+  const updateAccountField = (id, field, value) => {
+    setAccounts(prev => prev.map(a => a.id === id ? { ...a, [field]: value } : a));
+  };
+
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    setSavingNew(true);
+    setMsg('');
     try {
-      const result = await apiCall('invite', 'POST');
-      setInviteLink(result.data.link);
-      const exp = new Date(result.data.expiresAt);
-      setInviteExpiry('有效至：' + exp.toLocaleString('zh-TW'));
-      setInviteMsg('');
+      const result = await apiCall('users', 'POST', newAccount);
+      setAccounts(prev => [...prev, result.data]);
+      setNewAccount({ username: '', password: '', name: '', email: '', role: 'member' });
+      setMsg('帳號已新增');
     } catch (e) {
-      setInviteMsg('產生邀請連結失敗：' + translateError(e.message));
-      setInviteLink('');
+      setMsg('新增失敗：' + translateError(e.message));
     }
+    setSavingNew(false);
+  };
+
+  const handleSaveAccount = async (account) => {
+    setSavingAccount(account.id);
+    setMsg('');
+    try {
+      const payload = { id: account.id, name: account.name, email: account.email, role: account.role };
+      if (account.newPassword) payload.password = account.newPassword;
+      const result = await apiCall('users', 'PATCH', payload);
+      setAccounts(prev => prev.map(a => a.id === account.id ? { ...result.data, newPassword: '' } : a));
+      setMsg('帳號已更新');
+    } catch (e) {
+      setMsg('更新失敗：' + translateError(e.message));
+    }
+    setSavingAccount(null);
   };
 
   const handleDelete = async (id) => {
@@ -338,35 +360,47 @@ function AccountsTab() {
     try {
       await apiCall('users?id=' + encodeURIComponent(id), 'DELETE');
       setAccounts(prev => prev.filter(a => a.id !== id));
+      setMsg('帳號已刪除');
     } catch (e) {
       alert('刪除失敗：' + translateError(e.message));
     }
     setDeleting(null);
   };
 
-  const copyLink = () => {
-    navigator.clipboard.writeText(inviteLink).then(() => {
-      setInviteMsg('已複製到剪貼簿！');
-      setTimeout(() => setInviteMsg(''), 3000);
-    });
-  };
-
   return (
     <div className="tab-content">
       <h2 className="tab-title">帳號管理</h2>
 
-      <div className="accounts-invite">
-        <h3>產生邀請連結</h3>
-        <p className="invite-desc">邀請連結有效 48 小時，且僅可使用一次。</p>
-        <button className="btn-primary-sm" onClick={handleGenerateInvite}>產生邀請連結</button>
-        {inviteLink && (
-          <div className="invite-result">
-            <input type="text" className="input invite-link-input" readOnly value={inviteLink} />
-            <button className="btn-ghost-sm" onClick={copyLink}>複製</button>
-            <div className="invite-expiry">{inviteExpiry}</div>
+      <div className="card">
+        <div className="card-title">新增帳號</div>
+        <form className="account-form" onSubmit={handleCreate}>
+          <div className="row">
+            <Field label="帳號">
+              <input className="input" value={newAccount.username} onChange={e => setNewAccount(a => ({ ...a, username: e.target.value }))} />
+            </Field>
+            <Field label="初始密碼">
+              <input className="input" type="password" value={newAccount.password} onChange={e => setNewAccount(a => ({ ...a, password: e.target.value }))} />
+            </Field>
           </div>
-        )}
-        {inviteMsg && <div className="login-error">{inviteMsg}</div>}
+          <div className="row">
+            <Field label="名稱">
+              <input className="input" value={newAccount.name} onChange={e => setNewAccount(a => ({ ...a, name: e.target.value }))} />
+            </Field>
+            <Field label="Email">
+              <input className="input" type="email" value={newAccount.email} onChange={e => setNewAccount(a => ({ ...a, email: e.target.value }))} />
+            </Field>
+          </div>
+          <Field label="角色">
+            <select className="input" value={newAccount.role} onChange={e => setNewAccount(a => ({ ...a, role: e.target.value }))}>
+              <option value="member">一般用戶</option>
+              <option value="admin">管理者</option>
+            </select>
+          </Field>
+          <button className="btn-primary-sm account-submit" type="submit" disabled={savingNew || !newAccount.username || !newAccount.password}>
+            {savingNew ? '新增中…' : '新增帳號'}
+          </button>
+        </form>
+        {msg && <div className="login-error">{msg}</div>}
       </div>
 
       <div className="accounts-list">
@@ -383,17 +417,27 @@ function AccountsTab() {
                 <th>帳號</th>
                 <th>Email</th>
                 <th>角色</th>
+                <th>重設密碼</th>
                 <th>操作</th>
               </tr>
             </thead>
             <tbody>
               {accounts.map(a => (
                 <tr key={a.id} className={a.id === currentUserId ? 'current-user-row' : ''}>
-                  <td>{a.name || '（未設定）'}</td>
+                  <td><input className="input table-input" value={a.name || ''} onChange={e => updateAccountField(a.id, 'name', e.target.value)} /></td>
                   <td>{a.username}</td>
-                  <td>{a.email || '（未設定）'}</td>
-                  <td><span className={'role-badge role-' + a.role}>{a.role === 'admin' ? '管理者' : '一般用戶'}</span></td>
+                  <td><input className="input table-input" type="email" value={a.email || ''} onChange={e => updateAccountField(a.id, 'email', e.target.value)} /></td>
                   <td>
+                    <select className="input table-input" value={a.role} disabled={a.id === currentUserId} onChange={e => updateAccountField(a.id, 'role', e.target.value)}>
+                      <option value="member">一般用戶</option>
+                      <option value="admin">管理者</option>
+                    </select>
+                  </td>
+                  <td><input className="input table-input" type="password" placeholder="留空不變" value={a.newPassword || ''} onChange={e => updateAccountField(a.id, 'newPassword', e.target.value)} /></td>
+                  <td className="account-actions">
+                    <button className="btn-primary-sm" disabled={savingAccount === a.id} onClick={() => handleSaveAccount(a)}>
+                      {savingAccount === a.id ? '儲存中…' : '儲存'}
+                    </button>
                     {a.id !== currentUserId ? (
                       <button className="btn-ghost-sm danger" disabled={deleting === a.id} onClick={() => handleDelete(a.id)}>
                         {deleting === a.id ? '刪除中…' : '刪除'}

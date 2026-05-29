@@ -519,6 +519,65 @@ html, body {
 }
 .login-help li { margin-bottom: 4px; }
 
+/* Account management */
+.account-form {
+  margin-top: 4px;
+}
+.account-submit {
+  margin-top: 16px;
+}
+.accounts-list {
+  overflow-x: auto;
+}
+.accounts-list h3 {
+  margin: 0 0 14px;
+  font-size: 16px;
+  color: var(--cocoa);
+}
+.accounts-table {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 18px;
+  overflow: hidden;
+}
+.accounts-table th,
+.accounts-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+  vertical-align: middle;
+  font-size: 13px;
+}
+.accounts-table th {
+  background: var(--cream);
+  color: var(--cocoa-soft);
+  font-weight: 700;
+}
+.accounts-table tr:last-child td {
+  border-bottom: 0;
+}
+.current-user-row {
+  background: color-mix(in srgb, var(--sage) 10%, transparent);
+}
+.table-input {
+  min-width: 130px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+.account-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.self-label {
+  color: var(--cocoa-soft);
+  font-size: 12px;
+}
+
 /* Save bar */
 .save-bar {
   position: fixed;
