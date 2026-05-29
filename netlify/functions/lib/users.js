@@ -81,7 +81,10 @@ async function saveFileContent(data) {
     });
     if (!putRes.ok) {
       const err = await putRes.json().catch(() => ({}));
-      throw new Error(err.message || 'Unable to update users.json. Please check GH_TOKEN contents write permission.');
+      if (/Resource not accessible by personal access token/i.test(err.message || '')) {
+        throw new Error('GitHub token 沒有寫入權限，請更新 Netlify 的 GH_TOKEN 權限。');
+      }
+      throw new Error(err.message || '無法更新 users.json，請檢查 GH_TOKEN 是否有寫入權限。');
     }
     return;
   }

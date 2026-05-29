@@ -7,6 +7,15 @@ function authSession(token, store) {
   return getSessionFromToken(token, store);
 }
 
+async function saveUsers(store, headers) {
+  try {
+    await saveFileContent(store);
+    return null;
+  } catch (e) {
+    return { statusCode: 500, headers, body: JSON.stringify({ success: false, error: e.message || '帳號資料儲存失敗' }) };
+  }
+}
+
 exports.handler = async function (event) {
   const headers = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type,Authorization', 'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS', 'Content-Type': 'application/json' };
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers, body: '' };
@@ -55,7 +64,8 @@ exports.handler = async function (event) {
       createdAt: new Date().toISOString(),
     };
     store.users.push(user);
-    await saveFileContent(store);
+    const saveError = await saveUsers(store, headers);
+    if (saveError) return saveError;
     return { statusCode: 200, headers, body: JSON.stringify({ success: true, data: { id: user.id, username: user.username, name: user.name, email: user.email, role: user.role, createdAt: user.createdAt } }) };
   }
 
@@ -84,7 +94,8 @@ exports.handler = async function (event) {
       user.password = await bcrypt.hash(password, 10);
     }
 
-    await saveFileContent(store);
+    const saveError = await saveUsers(store, headers);
+    if (saveError) return saveError;
     return { statusCode: 200, headers, body: JSON.stringify({ success: true, data: { id: user.id, username: user.username, name: user.name, email: user.email, role: user.role, createdAt: user.createdAt } }) };
   }
 
@@ -97,7 +108,8 @@ exports.handler = async function (event) {
     if (idx === -1) return { statusCode: 404, headers, body: JSON.stringify({ success: false, error: '找不到該使用者' }) };
     store.users.splice(idx, 1);
     Object.keys(store.sessions || {}).forEach(t => { if (store.sessions[t].userId === targetId) delete store.sessions[t]; });
-    await saveFileContent(store);
+    const saveError = await saveUsers(store, headers);
+    if (saveError) return saveError;
     return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };
   }
 
