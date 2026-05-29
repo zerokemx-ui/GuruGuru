@@ -2,11 +2,15 @@
   "users": [
     {
       "id": "admin",
-      "password": "$2a$10$8K1p/a0dL1Lg7Gv9xA9BVeFLYXJ3F4.7F8mK5q6R2h9O3jX0y1H2S4i",
+      "username": "admin",
+      "password": "$2b$10$Tt51Fcb7WoSE2L0FZ7lSb.pOePI1C6lmXlLB9G/USulYV0qKV9HNm",
+      "name": "管理者",
+      "email": "zerokemx@gmail.com",
       "role": "admin",
-      "createdAt": "2026-01-01T00:00:00Z"
+      "createdAt": "2026-05-29T00:00:00Z"
     }
   ],
   "sessions": {},
-  "inviteCodes": []
+  "inviteCodes": [],
+  "failedLogins": {}
 }
