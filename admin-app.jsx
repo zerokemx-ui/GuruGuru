@@ -1,7 +1,7 @@
 const { useState, useEffect, useRef, useCallback } = React;
 
 // ── API helper ──────────────────────────────────────────────────────────────
-async function apiCall(endpoint, method = 'GET', body = null) {
+async function apiCall(endpoint, method = 'GET', body = null, retryAuth = true) {
   const token = sessionStorage.getItem('auth_token');
   const opts = {
     method,
@@ -13,9 +13,16 @@ async function apiCall(endpoint, method = 'GET', body = null) {
   if (body) opts.body = JSON.stringify(body);
   const r = await fetch('/api/' + endpoint, opts);
   const j = await r.json();
+  if (!r.ok && r.status === 401 && retryAuth && endpoint !== 'login') {
+    await new Promise(resolve => setTimeout(resolve, 800));
+    return apiCall(endpoint, method, body, false);
+  }
   if (!r.ok && r.status === 401) {
     logout();
     throw new Error('Unauthorized');
+  }
+  if (!r.ok || j.success === false) {
+    throw new Error(j.error || ('HTTP ' + r.status));
   }
   return j;
 }
@@ -178,8 +185,8 @@ function ProfileTab({ user, onUserUpdate }) {
     setSaving(true);
     setMsg('');
     try {
-      const updated = await apiCall('users/me', 'PATCH', { name, email });
-      onUserUpdate(updated);
+      const result = await apiCall('update-profile', 'POST', { name, email });
+      onUserUpdate({ ...user, ...result.data });
       setEditing(false);
       setMsg('個人資料已儲存');
       setMsgType('success');
@@ -199,7 +206,7 @@ function ProfileTab({ user, onUserUpdate }) {
     if (newPwd.length < 6) { setPwdMsg('新密碼至少要 6 個字元'); return; }
     setPwdSaving(true);
     try {
-      await apiCall('users/me/password', 'POST', { old_password: oldPwd, new_password: newPwd });
+      await apiCall('change-password', 'POST', { currentPassword: oldPwd, newPassword: newPwd });
       setOldPwd(''); setNewPwd(''); setConfirmPwd('');
       setShowPwd(false);
       setPwdMsg('密碼已更新');
@@ -301,9 +308,9 @@ function AccountsTab() {
     setLoading(true);
     setError('');
     try {
-      const data = await apiCall('users');
-      setAccounts(data.users || []);
-      setCurrentUserId(data.current_user_id);
+      const result = await apiCall('users');
+      setAccounts(result.data || []);
+      setCurrentUserId(JSON.parse(sessionStorage.getItem('user') || '{}').id);
     } catch (e) {
       setError('載入失敗：' + translateError(e.message));
     }
@@ -314,9 +321,9 @@ function AccountsTab() {
 
   const handleGenerateInvite = async () => {
     try {
-      const result = await apiCall('users/invite', 'POST');
-      setInviteLink(result.link);
-      const exp = new Date(result.expires_at);
+      const result = await apiCall('invite', 'POST');
+      setInviteLink(result.data.link);
+      const exp = new Date(result.data.expiresAt);
       setInviteExpiry('有效至：' + exp.toLocaleString('zh-TW'));
       setInviteMsg('');
     } catch (e) {
@@ -329,7 +336,7 @@ function AccountsTab() {
     if (!confirm('確定要刪除這個帳號嗎？')) return;
     setDeleting(id);
     try {
-      await apiCall('users/' + id, 'DELETE');
+      await apiCall('users?id=' + encodeURIComponent(id), 'DELETE');
       setAccounts(prev => prev.filter(a => a.id !== id));
     } catch (e) {
       alert('刪除失敗：' + translateError(e.message));
@@ -570,9 +577,9 @@ function AdminApp() {
     setLoginError('');
     try {
       const result = await apiCall('login', 'POST', { username, password });
-      sessionStorage.setItem('auth_token', result.token);
-      sessionStorage.setItem('user', JSON.stringify(result.user));
-      setUser(result.user);
+      sessionStorage.setItem('auth_token', result.data.token);
+      sessionStorage.setItem('user', JSON.stringify(result.data.user));
+      setUser(result.data.user);
       setLoggedIn(true);
       await loadData();
     } catch (e) {
