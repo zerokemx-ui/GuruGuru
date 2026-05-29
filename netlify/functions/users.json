@@ -1,16 +1,1 @@
-{
-  "users": [
-    {
-      "id": "admin",
-      "username": "admin",
-      "password": "$2b$10$Tt51Fcb7WoSE2L0FZ7lSb.pOePI1C6lmXlLB9G/USulYV0qKV9HNm",
-      "name": "管理者",
-      "email": "zerokemx@gmail.com",
-      "role": "admin",
-      "createdAt": "2026-05-29T00:00:00Z"
-    }
-  ],
-  "sessions": {},
-  "inviteCodes": [],
-  "failedLogins": {}
-}
+{"users":[{"id":"admin","username":"admin","password":"$2b$10$Tt51Fcb7WoSE2L0FZ7lSb.pOePI1C6lmXlLB9G/USulYV0qKV9HNm","name":"管理者","email":"zerokemx@gmail.com","role":"admin","createdAt":"2026-05-29T00:00:00Z"}],"sessions":{"7b50daca10e47eefd8319661b6246654":{"userId":"admin","username":"admin","role":"admin","createdAt":1780041472486,"expiresAt":1780127872486,"ip":"125.224.128.183, 175.41.145.240"}},"inviteCodes":[],"failedLogins":{}}
