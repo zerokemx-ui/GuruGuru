@@ -3,7 +3,11 @@
     {
       "id": "admin",
       "username": "admin",
+<<<<<<< Updated upstream
       "password": "$2b$10$Tt51Fcb7WoSE2L0FZ7lSb.pOePI1C6lmXlLB9G/USulYV0qKV9HNm",
+=======
+      "password": "$2b$10$1XiAlYke3zS7tsT1klwiBOrHkmpvtlVrOz9DaKQ/b/yJVD6hCjihi",
+>>>>>>> Stashed changes
       "name": "管理者",
       "email": "zerokemx@gmail.com",
       "role": "admin",

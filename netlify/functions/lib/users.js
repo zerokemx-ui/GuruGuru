@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const USERS_FILE = path.join(__dirname, '..', 'users.json');
+const USERS_FILE = path.join(__dirname, 'users.json');
 const GH_TOKEN = process.env.GH_TOKEN;
 const REPO_OWNER = 'zerokemx-ui';
 const REPO_NAME = 'GuruGuru';
