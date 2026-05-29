@@ -284,6 +284,12 @@ function ContactTab({ data, update, updateImage }) {
               <input className="input" value={data.contact.ig} onChange={e => update('contact.ig', e.target.value)} />
             </Field>
           </div>
+          <Field label="預約標題" hint="會顯示在咕嚕咕嚕字樣前方">
+            <input className="input" value={data.contact.bookingTitle || ''} onChange={e => update('contact.bookingTitle', e.target.value)} />
+          </Field>
+          <Field label="預約說明文字" hint="可換行，會顯示在頁面最下方的預約區塊">
+            <textarea className="input" rows="4" value={data.contact.bookingText || ''} onChange={e => update('contact.bookingText', e.target.value)} />
+          </Field>
         </div>
         <div className="card">
           <div className="card-title">LINE QR Code</div>

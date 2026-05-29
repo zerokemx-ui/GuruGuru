@@ -24,3 +24,13 @@
   for = "/admin-tabs.jsx"
   [headers.values]
     Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/sections-2.jsx"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/store.js"
+  [headers.values]
+    Cache-Control = "no-cache"

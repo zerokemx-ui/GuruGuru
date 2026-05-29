@@ -115,6 +115,7 @@ function translateError(msg) {
   const m = String(msg || '');
   if (/not found/i.test(m) || /\b404\b/.test(m)) return '找不到資源。';
   if (/bad credentials/i.test(m) || /\b401\b/.test(m)) return '認證失敗，請重新登入。';
+  if (/resource not accessible by personal access token/i.test(m)) return 'GitHub token 沒有寫入權限，請更新 Netlify 的 GH_TOKEN 權限。';
   if (/rate limit/i.test(m)) return '操作太頻繁，請稍後再試。';
   if (/\b403\b/.test(m)) return '沒有權限執行此操作。';
   if (/failed to fetch/i.test(m) || /networkerror/i.test(m) || /network error/i.test(m)) return '網路連線失敗，請檢查網路後再試。';

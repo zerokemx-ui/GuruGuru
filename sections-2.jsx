@@ -178,6 +178,8 @@ function Reviews({ data }) {
 
 function Booking({ data }) {
   useReveal();
+  const bookingText = data.contact.bookingText || '因為店內同時最多三隻寶貝，採完全預約制。\n掃描 LINE QR Code 或私訊 IG 即可，附上寶貝照片、體重與最近一次美容時間。';
+  const bookingLines = bookingText.split('\n');
   return (
     <section className="booking" id="booking">
       <div className="booking-card reveal">
@@ -186,10 +188,11 @@ function Booking({ data }) {
             <span style={{ background: 'var(--peach)' }}></span>
             BOOKING · 預約你的時段
           </div>
-          <h2 className="booking-title">想讓寶貝來<span className="accent">咕嚕咕嚕</span>一下嗎？</h2>
+          <h2 className="booking-title">{data.contact.bookingTitle || '想讓寶貝來'}<span className="accent">咕嚕咕嚕</span>一下嗎？</h2>
           <p className="booking-sub">
-            因為店內同時最多三隻寶貝，採完全預約制。<br />
-            掃描 LINE QR Code 或私訊 IG 即可，附上寶貝照片、體重與最近一次美容時間。
+            {bookingLines.map((line, i) => (
+              <React.Fragment key={i}>{line}{i < bookingLines.length - 1 && <br />}</React.Fragment>
+            ))}
           </p>
           <div className="booking-info">
             <div className="booking-info-item">

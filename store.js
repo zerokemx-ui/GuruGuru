@@ -49,6 +49,8 @@ var DEFAULTS = {
     phone: '0980 577 272',
     line: '@doubledachshund',
     ig: '@doubledachshund',
+    bookingTitle: '想讓寶貝來',
+    bookingText: '因為店內同時最多三隻寶貝，採完全預約制。\n掃描 LINE QR Code 或私訊 IG 即可，附上寶貝照片、體重與最近一次美容時間。',
     lineQR: 'assets/line-qr.png',
   },
   images: {},

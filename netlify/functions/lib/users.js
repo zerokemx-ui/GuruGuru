@@ -24,6 +24,10 @@ const DEFAULT_STORE = {
   failedLogins: {},
 };
 
+function cloneStore(data) {
+  return JSON.parse(JSON.stringify(data));
+}
+
 async function getFileContent() {
   if (GH_TOKEN) {
     const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${USERS_FILE_PATH}`;
@@ -42,7 +46,7 @@ async function getFileContent() {
   if (fs.existsSync(USERS_FILE)) {
     return JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'));
   }
-  return JSON.parse(JSON.stringify(DEFAULT_STORE));
+  return cloneStore(DEFAULT_STORE);
 }
 
 async function saveFileContent(data) {
@@ -55,6 +59,10 @@ async function saveFileContent(data) {
         'X-GitHub-Api-Version': '2022-11-28',
       },
     });
+    if (!getRes.ok) {
+      const err = await getRes.json().catch(() => ({}));
+      throw new Error(err.message || 'Unable to read users.json');
+    }
     const getData = await getRes.json();
     const sha = getData.sha;
 
@@ -73,7 +81,7 @@ async function saveFileContent(data) {
     });
     if (!putRes.ok) {
       const err = await putRes.json().catch(() => ({}));
-      throw new Error(err.message || 'Unable to update users.json');
+      throw new Error(err.message || 'Unable to update users.json. Please check GH_TOKEN contents write permission.');
     }
     return;
   }

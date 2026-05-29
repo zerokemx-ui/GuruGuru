@@ -1,33 +1,7 @@
-const { getSessionFromToken } = require('./lib/users');
+const { getFileContent, getSessionFromToken, saveFileContent } = require('./lib/users');
 const bcrypt = require('bcryptjs');
 
-const GH_TOKEN = process.env.GH_TOKEN;
-const REPO = 'zerokemx-ui/GuruGuru';
-const USERS_FILE_PATH = 'netlify/functions/users.json';
 const MIN_PASSWORD_LEN = 6;
-
-async function getStore() {
-  if (GH_TOKEN) {
-    const url = `https://api.github.com/repos/${REPO}/contents/${USERS_FILE_PATH}`;
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${GH_TOKEN}`, 'X-GitHub-Api-Version': '2022-11-28' } });
-    if (res.ok) { const data = await res.json(); return { store: JSON.parse(Buffer.from(data.content, 'base64').toString('utf-8')), sha: data.sha }; }
-  }
-  return { store: null, sha: null };
-}
-
-async function saveStore(store, sha) {
-  if (GH_TOKEN) {
-    const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${USERS_FILE_PATH}`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${GH_TOKEN}`, 'Content-Type': 'application/json', 'X-GitHub-Api-Version': '2022-11-28' },
-      body: JSON.stringify({ message: 'Update users.json', content: Buffer.from(JSON.stringify(store)).toString('base64'), ...(sha && { sha }) }),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || 'Unable to update users.json');
-    }
-  }
-}
 
 function authSession(token, store) {
   return getSessionFromToken(token, store);
@@ -41,7 +15,7 @@ exports.handler = async function (event) {
   if (!authHeader || !authHeader.startsWith('Bearer ')) return { statusCode: 401, headers, body: JSON.stringify({ success: false, error: '未授權' }) };
 
   const token = authHeader.slice(7);
-  const { store, sha } = await getStore();
+  const store = await getFileContent();
   if (!store) return { statusCode: 500, headers, body: JSON.stringify({ success: false, error: '系統錯誤' }) };
 
   const session = authSession(token, store);
@@ -81,7 +55,7 @@ exports.handler = async function (event) {
       createdAt: new Date().toISOString(),
     };
     store.users.push(user);
-    await saveStore(store, sha);
+    await saveFileContent(store);
     return { statusCode: 200, headers, body: JSON.stringify({ success: true, data: { id: user.id, username: user.username, name: user.name, email: user.email, role: user.role, createdAt: user.createdAt } }) };
   }
 
@@ -110,7 +84,7 @@ exports.handler = async function (event) {
       user.password = await bcrypt.hash(password, 10);
     }
 
-    await saveStore(store, sha);
+    await saveFileContent(store);
     return { statusCode: 200, headers, body: JSON.stringify({ success: true, data: { id: user.id, username: user.username, name: user.name, email: user.email, role: user.role, createdAt: user.createdAt } }) };
   }
 
@@ -123,7 +97,7 @@ exports.handler = async function (event) {
     if (idx === -1) return { statusCode: 404, headers, body: JSON.stringify({ success: false, error: '找不到該使用者' }) };
     store.users.splice(idx, 1);
     Object.keys(store.sessions || {}).forEach(t => { if (store.sessions[t].userId === targetId) delete store.sessions[t]; });
-    await saveStore(store, sha);
+    await saveFileContent(store);
     return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };
   }
 
