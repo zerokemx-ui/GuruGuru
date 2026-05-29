@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs');
+const { getSessionFromToken } = require('./lib/users');
 const GH_TOKEN = process.env.GH_TOKEN;
 const REPO = 'zerokemx-ui/GuruGuru';
 const USERS_FILE_PATH = 'netlify/functions/users.json';
@@ -24,10 +25,7 @@ async function saveStore(store, sha) {
 }
 
 function authSession(token, store) {
-  const now = Date.now();
-  const session = store.sessions && store.sessions[token];
-  if (!session || session.expiresAt < now) return null;
-  return session;
+  return getSessionFromToken(token, store);
 }
 
 exports.handler = async function (event) {
@@ -64,4 +62,3 @@ exports.handler = async function (event) {
 
   return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };
 };
-

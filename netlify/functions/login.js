@@ -1,9 +1,8 @@
 const bcrypt = require('bcryptjs');
-const { getFileContent, saveFileContent, generateToken } = require('./lib/users');
+const { createSessionToken, getFileContent, saveFileContent } = require('./lib/users');
 
 const LOCKOUT_WINDOW = 10 * 60 * 1000;
 const MAX_ATTEMPTS = 5;
-const TOKEN_TTL = 24 * 60 * 60 * 1000;
 
 exports.handler = async function (event) {
   const headers = {
@@ -33,7 +32,6 @@ exports.handler = async function (event) {
   const ip = event.headers['x-forwarded-for'] || 'unknown';
   const now = Date.now();
   const store = await getFileContent();
-  store.sessions = store.sessions || {};
   store.failedLogins = store.failedLogins || {};
 
   const usernameKey = username.toLowerCase();
@@ -61,17 +59,11 @@ exports.handler = async function (event) {
   }
 
   delete store.failedLogins[usernameKey];
+  if (recent.length) {
+    await saveFileContent(store);
+  }
 
-  const token = generateToken();
-  store.sessions[token] = {
-    userId: user.id,
-    username: user.username,
-    role: user.role,
-    createdAt: now,
-    expiresAt: now + TOKEN_TTL,
-    ip,
-  };
-  await saveFileContent(store);
+  const token = createSessionToken(user, ip);
 
   return {
     statusCode: 200,

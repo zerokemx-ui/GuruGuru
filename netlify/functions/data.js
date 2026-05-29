@@ -1,4 +1,4 @@
-const { getFileContent, saveFileContent } = require('./lib/users');
+const { getFileContent, getSessionFromToken } = require('./lib/users');
 
 exports.handler = async function (event) {
   const headers = {
@@ -19,9 +19,8 @@ exports.handler = async function (event) {
 
   const token = authHeader.slice(7);
   const store = await getFileContent();
-  const now = Date.now();
-  const session = store.sessions?.[token];
-  if (!session || session.expiresAt < now) {
+  const session = getSessionFromToken(token, store);
+  if (!session) {
     return { statusCode: 401, headers, body: JSON.stringify({ success: false, error: 'session 已過期，請重新登入' }) };
   }
 

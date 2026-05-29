@@ -1,4 +1,4 @@
-const crypto = require('crypto');
+const { getSessionFromToken } = require('./lib/users');
 
 const GH_TOKEN=process.env.GH_TOKEN;
 const REPO = 'zerokemx-ui/GuruGuru';
@@ -24,9 +24,8 @@ exports.handler = async function (event) {
   const { store } = await getStore();
   if (!store) return { statusCode: 500, headers, body: JSON.stringify({ success: false, error: '系統錯誤' }) };
 
-  const now = Date.now();
-  const session = store.sessions?.[token];
-  if (!session || session.expiresAt < now) return { statusCode: 401, headers, body: JSON.stringify({ success: false, error: 'session 已過期，請重新登入' }) };
+  const session = getSessionFromToken(token, store);
+  if (!session) return { statusCode: 401, headers, body: JSON.stringify({ success: false, error: 'session 已過期，請重新登入' }) };
 
   const user = store.users.find(u => u.id === session.userId);
   if (!user) return { statusCode: 401, headers, body: JSON.stringify({ success: false, error: '找不到使用者' }) };

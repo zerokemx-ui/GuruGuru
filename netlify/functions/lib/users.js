@@ -58,7 +58,7 @@ async function saveFileContent(data) {
     const getData = await getRes.json();
     const sha = getData.sha;
 
-    await fetch(url, {
+    const putRes = await fetch(url, {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${GH_TOKEN}`,
@@ -71,6 +71,10 @@ async function saveFileContent(data) {
         sha,
       }),
     });
+    if (!putRes.ok) {
+      const err = await putRes.json().catch(() => ({}));
+      throw new Error(err.message || 'Unable to update users.json');
+    }
     return;
   }
   fs.writeFileSync(USERS_FILE, content, 'utf-8');
@@ -80,8 +84,58 @@ function generateToken() {
   return crypto.randomBytes(16).toString('hex');
 }
 
+function base64UrlEncode(value) {
+  return Buffer.from(JSON.stringify(value)).toString('base64url');
+}
+
+function base64UrlDecode(value) {
+  return JSON.parse(Buffer.from(value, 'base64url').toString('utf-8'));
+}
+
+function authSecret() {
+  return process.env.AUTH_SECRET || GH_TOKEN || 'guruguru-local-dev-secret';
+}
+
+function signTokenPayload(payload) {
+  return crypto.createHmac('sha256', authSecret()).update(payload).digest('base64url');
+}
+
+function createSessionToken(user, ip, ttlMs = 24 * 60 * 60 * 1000) {
+  const now = Date.now();
+  const payload = base64UrlEncode({
+    userId: user.id,
+    username: user.username,
+    role: user.role,
+    createdAt: now,
+    expiresAt: now + ttlMs,
+    ip,
+    nonce: generateToken(),
+  });
+  return payload + '.' + signTokenPayload(payload);
+}
+
+function getSessionFromToken(token, store) {
+  if (!token) return null;
+
+  if (token.includes('.')) {
+    const [payload, signature] = token.split('.');
+    if (!payload || !signature || signTokenPayload(payload) !== signature) return null;
+    const session = base64UrlDecode(payload);
+    if (!session.expiresAt || session.expiresAt < Date.now()) return null;
+    const user = (store.users || []).find(u => u.id === session.userId);
+    if (!user) return null;
+    return { ...session, role: user.role };
+  }
+
+  const session = store.sessions && store.sessions[token];
+  if (!session || session.expiresAt < Date.now()) return null;
+  return session;
+}
+
 module.exports = {
+  createSessionToken,
   getFileContent,
+  getSessionFromToken,
   saveFileContent,
   generateToken,
   USERS_FILE,
